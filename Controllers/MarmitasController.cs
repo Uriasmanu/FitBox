@@ -143,6 +143,19 @@ public class MarmitasController : ControllerBase
         return Ok(marmitaDtos);
     }
 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteMarmita(Guid id)
+    {
+        var marmita = await _context.Marmitas.FindAsync(id);
+        if (marmita == null)
+        {
+            return NotFound();
+        }
+        _context.Marmitas.Remove(marmita);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
     [HttpGet("ingredientes")]
     public async Task<ActionResult<IEnumerable<IngredienteDTO>>> GetAllIngredientes()
     {
@@ -155,5 +168,18 @@ public class MarmitasController : ControllerBase
             .ToListAsync();
 
         return Ok(ingredientes);
+    }
+
+    [HttpDelete("ingredientes/{id}")]
+    public async Task<IActionResult> DeleteIngrediente(Guid id)
+    {
+        var ingredientes = await _context.Ingredientes.FindAsync(id);
+        if (ingredientes == null)
+        {
+            return NotFound();
+        }
+        _context.Ingredientes.Remove(ingredientes);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 }
