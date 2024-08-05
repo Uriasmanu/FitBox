@@ -7,6 +7,8 @@ public class FitDbContext : DbContext
 
     public DbSet<Marmita> Marmitas { get; set; }
     public DbSet<Ingrediente> Ingredientes { get; set; }
+    public DbSet<Receitas> Receitas { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

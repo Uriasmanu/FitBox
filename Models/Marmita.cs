@@ -9,7 +9,7 @@ namespace FitBox.Models
         [Key]
         public Guid Id { get; set; }
         public string Nome { get; set; }
-        public double TamanhoRecipiente { get; set; }
+        public double TamanhoRecipiente { get; set; } = 500;
         public Guid ProteinaId { get; set; }
         public Guid CarboidratoId { get; set; }
         public Ingrediente Proteina { get; set; }

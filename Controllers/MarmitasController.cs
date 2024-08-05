@@ -72,6 +72,33 @@ public class MarmitasController : ControllerBase
         _context.Marmitas.Add(marmita);
         await _context.SaveChangesAsync();
 
+        // Verificar se a receita já existe na tabela Receitas
+        var receitaExistente = await _context.Receitas
+            .FirstOrDefaultAsync(r =>
+                r.Nome == marmitaDto.Nome &&
+                r.TamanhoRecipiente == marmitaDto.TamanhoRecipiente &&
+                r.ProteinaId == proteina.Id &&
+                r.CarboidratoId == carboidrato.Id &&
+                r.Verdura == marmitaDto.Verdura);
+
+        if (receitaExistente == null)
+        {
+            // Adicionar a nova receita à tabela Receitas
+            var receita = new Receitas
+            {
+                Nome = marmitaDto.Nome,
+                TamanhoRecipiente = marmitaDto.TamanhoRecipiente,
+                ProteinaId = proteina.Id,
+                CarboidratoId = carboidrato.Id,
+                Verdura = marmitaDto.Verdura,
+                DataCriacao = DateTime.UtcNow,
+                Favorita = false, // Valor padrão
+            };
+
+            _context.Receitas.Add(receita);
+            await _context.SaveChangesAsync();
+        }
+
         return CreatedAtAction(nameof(GetMarmitaById), new { id = marmita.Id }, marmita);
     }
 
@@ -182,4 +209,37 @@ public class MarmitasController : ControllerBase
         await _context.SaveChangesAsync();
         return NoContent();
     }
+
+    [HttpGet("receitas")]
+    public async Task<ActionResult<IEnumerable<object>>> GetAllReceitas()
+    {
+        var receitas = await _context.Receitas
+            .Include(r => r.Proteina)
+            .Include(r => r.Carboidrato)
+            .ToListAsync();
+
+        var receitaDtos = receitas.Select(r => new
+        {
+            r.Id,
+            r.Nome,
+            r.TamanhoRecipiente,
+            Proteina = new IngredienteDTO
+            {
+                Id = r.Proteina.Id,
+                Nome = r.Proteina.Nome
+            },
+            Carboidrato = new IngredienteDTO
+            {
+                Id = r.Carboidrato.Id,
+                Nome = r.Carboidrato.Nome
+            },
+            r.Verdura,
+            r.Favorita,
+            r.DataCriacao
+        });
+
+        return Ok(receitaDtos);
+    }
+
 }
+

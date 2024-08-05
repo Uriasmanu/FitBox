@@ -11,6 +11,13 @@ namespace FitBox.Models
         [Required]
         public string Nome { get; set; }
 
-        public List<Ingrediente> Ingredientes { get; set; } = new List<Ingrediente>();
+        public int TamanhoRecipiente { get; internal set; }
+        public Guid ProteinaId { get; internal set; }
+        public Guid CarboidratoId { get; internal set; }
+        public Ingrediente Proteina { get; set; }
+        public Ingrediente Carboidrato { get; set; }
+        public bool Verdura { get; internal set; }
+        public DateTime DataCriacao { get; internal set; }
+        public bool Favorita { get; set; } = false;
     }
 }
