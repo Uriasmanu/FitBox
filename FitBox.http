@@ -1,0 +1,6 @@
+@FitBox_HostAddress = http://localhost:5012
+
+GET {{FitBox_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
