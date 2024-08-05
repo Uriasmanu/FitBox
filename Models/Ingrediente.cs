@@ -10,6 +10,8 @@ namespace FitBox.Models
         public string Nome { get; set; }
         public double Quantidade { get; set; }
         public TipoIngrediente Tipo { get; set; }
+        public bool Favorita { get; set; } = false;
+
     }
 
     public enum TipoIngrediente
