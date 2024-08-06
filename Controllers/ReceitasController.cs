@@ -42,12 +42,16 @@ namespace FitBox.Controllers
 
         // PUT: api/receitas/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutReceita(Guid id, Receitas receita)
+        public async Task<IActionResult> PutReceitas(Guid id)
         {
-            if (id != receita.Id)
+            var receita = await _context.Receitas.FindAsync(id);
+            if (receita == null)
             {
-                return BadRequest();
+                return NotFound();
             }
+
+            // Inverte o valor de Favorita
+            receita.Favorita = !receita.Favorita;
 
             _context.Entry(receita).State = EntityState.Modified;
 
@@ -57,18 +61,12 @@ namespace FitBox.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ReceitaExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
-            return NoContent();
+            return Ok(receita);
         }
+
 
         // POST: api/receitas
         [HttpPost]
