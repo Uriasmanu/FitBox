@@ -21,28 +21,59 @@ namespace FitBox.Controllers
 
         // GET: api/receitas
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Receitas>>> GetReceitas()
+        public async Task<ActionResult<IEnumerable<ReceitaDTO>>> GetReceitas()
         {
-            return await _context.Receitas.ToListAsync();
+            var receitas = await _context.Receitas
+               .Include(r => r.Proteina)
+               .Include(r => r.Carboidrato)
+               .Select(r => new ReceitaDTO
+               {
+                   Id = r.Id,
+                   Nome = r.Nome,
+                   TamanhoRecipiente = r.TamanhoRecipiente,
+                   Proteina = r.Proteina.Nome,
+                   Carboidrato = r.Carboidrato.Nome,
+                   Verdura = r.Verdura,
+                   DataCriacao = r.DataCriacao,
+                   Favorita = r.Favorita
+               })
+               .ToListAsync();
+
+            return Ok(receitas);
         }
 
         // GET: api/receitas/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Receitas>> GetReceita(Guid id)
+        public async Task<ActionResult<ReceitaDTO>> GetReceita(Guid id)
         {
-            var receita = await _context.Receitas.FindAsync(id);
+            var receita = await _context.Receitas
+                .Include(r => r.Proteina)
+                .Include(r => r.Carboidrato)
+                .Where(r => r.Id == id)
+                .Select(r => new ReceitaDTO
+                {
+                    Id = r.Id,
+                    Nome = r.Nome,
+                    TamanhoRecipiente = r.TamanhoRecipiente,
+                    Proteina = r.Proteina.Nome,
+                    Carboidrato = r.Carboidrato.Nome,
+                    Verdura = r.Verdura,
+                    DataCriacao = r.DataCriacao,
+                    Favorita = r.Favorita
+                })
+                .FirstOrDefaultAsync();
 
             if (receita == null)
             {
                 return NotFound();
             }
 
-            return receita;
+            return Ok(receita);
         }
 
         // PUT: api/receitas/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutReceitas(Guid id)
+        public async Task<IActionResult> PutReceita(Guid id)
         {
             var receita = await _context.Receitas.FindAsync(id);
             if (receita == null)
@@ -67,36 +98,65 @@ namespace FitBox.Controllers
             return Ok(receita);
         }
 
-
         // POST: api/receitas
         [HttpPost]
-        public async Task<ActionResult<Receitas>> PostReceita(Receitas receita)
+public async Task<ActionResult<ReceitaDTO>> CreateReceita([FromBody] ReceitaDTO receitaDto)
+{
+    // Carrega todos os ingredientes na memória
+    var ingredientes = await _context.Ingredientes.ToListAsync();
+
+    // Verifica ou cria a proteína
+    var proteina = ingredientes
+        .FirstOrDefault(i => i.Nome.Equals(receitaDto.Proteina, StringComparison.OrdinalIgnoreCase));
+
+    if (proteina == null)
+    {
+        proteina = new Ingrediente
         {
-            _context.Receitas.Add(receita);
-            await _context.SaveChangesAsync();
+            Id = Guid.NewGuid(),
+            Nome = receitaDto.Proteina
+        };
+        _context.Ingredientes.Add(proteina);
+        await _context.SaveChangesAsync();
+    }
 
-            return CreatedAtAction(nameof(GetReceita), new { id = receita.Id }, receita);
-        }
+    // Verifica ou cria o carboidrato
+    var carboidrato = ingredientes
+        .FirstOrDefault(i => i.Nome.Equals(receitaDto.Carboidrato, StringComparison.OrdinalIgnoreCase));
 
-        // DELETE: api/receitas/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReceita(Guid id)
+    if (carboidrato == null)
+    {
+        carboidrato = new Ingrediente
         {
-            var receita = await _context.Receitas.FindAsync(id);
-            if (receita == null)
-            {
-                return NotFound();
-            }
+            Id = Guid.NewGuid(),
+            Nome = receitaDto.Carboidrato
+        };
+        _context.Ingredientes.Add(carboidrato);
+        await _context.SaveChangesAsync();
+    }
 
-            _context.Receitas.Remove(receita);
-            await _context.SaveChangesAsync();
+    var receita = new Receitas
+    {
+        Id = Guid.NewGuid(),
+        Nome = receitaDto.Nome,
+        TamanhoRecipiente = receitaDto.TamanhoRecipiente,
+        ProteinaId = proteina.Id,
+        CarboidratoId = carboidrato.Id,
+        Verdura = receitaDto.Verdura,
+        DataCriacao = DateTime.UtcNow,
+        Favorita = false
+    };
 
-            return NoContent();
-        }
+    _context.Receitas.Add(receita);
+    await _context.SaveChangesAsync();
 
-        private bool ReceitaExists(Guid id)
-        {
-            return _context.Receitas.Any(e => e.Id == id);
-        }
+    receitaDto.Id = receita.Id;
+    receitaDto.DataCriacao = receita.DataCriacao;
+    receitaDto.Proteina = proteina.Nome;
+    receitaDto.Carboidrato = carboidrato.Nome;
+
+    return CreatedAtAction(nameof(GetReceita), new { id = receita.Id }, receitaDto);
+}
+
     }
 }
