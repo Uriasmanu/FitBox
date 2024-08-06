@@ -98,65 +98,63 @@ namespace FitBox.Controllers
             return Ok(receita);
         }
 
-        // POST: api/receitas
         [HttpPost]
-public async Task<ActionResult<ReceitaDTO>> CreateReceita([FromBody] ReceitaDTO receitaDto)
-{
-    // Carrega todos os ingredientes na memória
-    var ingredientes = await _context.Ingredientes.ToListAsync();
-
-    // Verifica ou cria a proteína
-    var proteina = ingredientes
-        .FirstOrDefault(i => i.Nome.Equals(receitaDto.Proteina, StringComparison.OrdinalIgnoreCase));
-
-    if (proteina == null)
-    {
-        proteina = new Ingrediente
+        public async Task<ActionResult<ReceitaDTO>> CreateReceita([FromBody] ReceitaDTO receitaDto)
         {
-            Id = Guid.NewGuid(),
-            Nome = receitaDto.Proteina
-        };
-        _context.Ingredientes.Add(proteina);
-        await _context.SaveChangesAsync();
-    }
+            // Transforma os nomes dos ingredientes em minúsculas
+            var proteinaNome = receitaDto.Proteina.ToLower();
+            var carboidratoNome = receitaDto.Carboidrato.ToLower();
 
-    // Verifica ou cria o carboidrato
-    var carboidrato = ingredientes
-        .FirstOrDefault(i => i.Nome.Equals(receitaDto.Carboidrato, StringComparison.OrdinalIgnoreCase));
+            var proteina = await _context.Ingredientes
+                .FirstOrDefaultAsync(i => i.Nome.Equals(proteinaNome, StringComparison.OrdinalIgnoreCase));
 
-    if (carboidrato == null)
-    {
-        carboidrato = new Ingrediente
-        {
-            Id = Guid.NewGuid(),
-            Nome = receitaDto.Carboidrato
-        };
-        _context.Ingredientes.Add(carboidrato);
-        await _context.SaveChangesAsync();
-    }
+            if (proteina == null)
+            {
+                proteina = new Ingrediente
+                {
+                    Id = Guid.NewGuid(),
+                    Nome = proteinaNome
+                };
+                _context.Ingredientes.Add(proteina);
+                await _context.SaveChangesAsync();
+            }
 
-    var receita = new Receitas
-    {
-        Id = Guid.NewGuid(),
-        Nome = receitaDto.Nome,
-        TamanhoRecipiente = receitaDto.TamanhoRecipiente,
-        ProteinaId = proteina.Id,
-        CarboidratoId = carboidrato.Id,
-        Verdura = receitaDto.Verdura,
-        DataCriacao = DateTime.UtcNow,
-        Favorita = false
-    };
+            var carboidrato = await _context.Ingredientes
+                .FirstOrDefaultAsync(i => i.Nome.Equals(carboidratoNome, StringComparison.OrdinalIgnoreCase));
 
-    _context.Receitas.Add(receita);
-    await _context.SaveChangesAsync();
+            if (carboidrato == null)
+            {
+                carboidrato = new Ingrediente
+                {
+                    Id = Guid.NewGuid(),
+                    Nome = carboidratoNome
+                };
+                _context.Ingredientes.Add(carboidrato);
+                await _context.SaveChangesAsync();
+            }
 
-    receitaDto.Id = receita.Id;
-    receitaDto.DataCriacao = receita.DataCriacao;
-    receitaDto.Proteina = proteina.Nome;
-    receitaDto.Carboidrato = carboidrato.Nome;
+            var receita = new Receitas
+            {
+                Id = Guid.NewGuid(),
+                Nome = receitaDto.Nome,
+                TamanhoRecipiente = receitaDto.TamanhoRecipiente,
+                ProteinaId = proteina.Id,
+                CarboidratoId = carboidrato.Id,
+                Verdura = receitaDto.Verdura,
+                DataCriacao = DateTime.UtcNow,
+                Favorita = receitaDto.Favorita
+            };
 
-    return CreatedAtAction(nameof(GetReceita), new { id = receita.Id }, receitaDto);
-}
+            _context.Receitas.Add(receita);
+            await _context.SaveChangesAsync();
+
+            receitaDto.Id = receita.Id;
+            receitaDto.DataCriacao = receita.DataCriacao;
+            receitaDto.Proteina = proteina.Nome;
+            receitaDto.Carboidrato = carboidrato.Nome;
+
+            return CreatedAtAction(nameof(GetReceita), new { id = receita.Id }, receitaDto);
+        }
 
     }
 }

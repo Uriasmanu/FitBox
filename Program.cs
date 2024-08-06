@@ -13,6 +13,12 @@ builder.Services.AddDbContext<FitDbContext>(options =>
 // Configura o Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(option => option.AddDefaultPolicy(policy =>
+{
+    policy.AllowAnyOrigin();
+    policy.AllowAnyMethod();
+    policy.AllowAnyHeader();
+}));
 
 var app = builder.Build();
 
