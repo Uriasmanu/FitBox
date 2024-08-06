@@ -61,22 +61,16 @@ namespace FitBox.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutIngrediente(Guid id, [FromBody] IngredienteDTO ingredienteDto)
+        public async Task<IActionResult> PutIngrediente(Guid id)
         {
-            if (id != ingredienteDto.Id)
-            {
-                return BadRequest("ID mismatch.");
-            }
-
             var ingrediente = await _context.Ingredientes.FindAsync(id);
             if (ingrediente == null)
             {
                 return NotFound();
             }
 
-            ingrediente.Nome = ingredienteDto.Nome;
-            ingrediente.Tipo = ingredienteDto.Tipo;
-            ingrediente.Favorita = ingredienteDto.Favorita;
+            // Inverte o valor de Favorita
+            ingrediente.Favorita = !ingrediente.Favorita;
 
             _context.Entry(ingrediente).State = EntityState.Modified;
 
@@ -86,18 +80,12 @@ namespace FitBox.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!IngredienteExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
-            return NoContent();
+            return Ok(ingrediente);
         }
+
 
 
         // POST: api/ingredientes
