@@ -183,4 +183,31 @@ public class MarmitasController : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutMarmitas(Guid id)
+    {
+        var marmita = await _context.Marmitas.FindAsync(id);
+        if (marmita == null)
+        {
+            return NotFound();
+        }
+
+        // Inverte o valor de Favorita
+        marmita.Favorita = !marmita.Favorita;
+
+        _context.Entry(marmita).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw;
+        }
+
+        return Ok(marmita);
+    }
+
+
 }
